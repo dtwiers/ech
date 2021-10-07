@@ -4,7 +4,6 @@ module Types where
 
 import RIO
 import RIO.Process
-import GHC.Base (Nat)
 
 -- | Command line arguments
 
@@ -21,8 +20,12 @@ data Command
   | Info
   | Bright Brightness
   | Temp Temperature
+  deriving ( Show )
 
-data Options = Options GlobalOptions Command
+data Options = Options
+  { optionsGlobalOptions :: GlobalOptions
+  , optionsCommand ::  Command
+  }
 
 data App = App
   { appLogFunc :: !LogFunc,
