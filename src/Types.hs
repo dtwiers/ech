@@ -10,8 +10,9 @@ import RIO
 import RIO.Process
 
 -- | Command line arguments
-newtype GlobalOptions = GlobalOptions
-  { optionsVerbose :: Bool
+data GlobalOptions = GlobalOptions
+  { optionsVerbose :: !Bool
+  , optionsConfigPath :: !String
   }
 
 instance Display GlobalOptions where
