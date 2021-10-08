@@ -12,7 +12,7 @@ import RIO.Process
 -- | Command line arguments
 data GlobalOptions = GlobalOptions
   { optionsVerbose :: !Bool
-  , optionsConfigPath :: !String
+  , optionsConfigPath :: !FilePath
   }
 
 instance Display GlobalOptions where
@@ -23,6 +23,8 @@ type Brightness = Int
 
 type Temperature = Int
 
+type DeviceList = [String]
+
 data Listable
   = Devices
   deriving (Show)
@@ -31,11 +33,11 @@ instance Display Listable where
   display = \Devices -> "Devices"
 
 data Command
-  = On
-  | Off
-  | Info
-  | Bright Brightness
-  | Temp Temperature
+  = On DeviceList
+  | Off DeviceList
+  | Info DeviceList
+  | Bright Brightness DeviceList
+  | Temp Temperature DeviceList
   | List Listable
   deriving (Show)
 

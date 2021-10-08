@@ -11,40 +11,42 @@ import System.Directory
 import System.FilePath (FilePath, (</>))
 
 parseGlobalOptions :: FilePath -> Parser GlobalOptions
-parseGlobalOptions defaultConfigPath = GlobalOptions <$> (verbose <*> configPath)
+parseGlobalOptions defaultConfigPath = GlobalOptions <$> (verbose <*> configPath defaultConfigPath)
   where
     verbose = switch (long "verbose" <> short 'v' <> help "Verbose Output")
 
-    configPath =
+    configPath p =
       option
         auto
         ( long "config"
             <> short 'c'
             <> help "Config File Path"
             <> metavar "PATH"
-            <> value defaultConfigPath
+            <> value p
         )
 
 parseCommand :: Parser Command
-parseCommand path = hsubparser $ onP <> offP <> getInfoP <> brightP <> tempP <> listP
+parseCommand = hsubparser $ onP <> offP <> getInfoP <> brightP <> tempP <> listP
   where
-    onP = command "on" (info (pure On) (progDesc "Turn the default lights on."))
-    offP = command "off" (info (pure Off) (progDesc "Turn the default lights off."))
-    getInfoP = command "info" (info (pure Info) (progDesc "Get info about lights"))
+    onP = command "on" (info (helper <*> On <*> deviceListOptions) (progDesc "Turn the default lights on."))
+    offP = command "off" (info (helper <*> Off <*> deviceListOptions) (progDesc "Turn the default lights off."))
+    getInfoP = command "info" (info (helper <*> Info <*> deviceListOptions) (progDesc "Get info about lights"))
     brightP = command "bright" (info (helper <*> brightOptions) (progDesc "Set brightness of lights"))
     tempP = command "temp" (info (helper <*> tempOptions) (progDesc "Set Color Temp of lights"))
     listP = command "list" (info (helper <*> listOptions) (progDesc "List config items"))
+    deviceListOptions :: Parser DeviceList
+    deviceListOptions = many $ argument str (metavar "DEVICES...")
     brightOptions :: Parser Command
-    brightOptions = Bright <$> argument auto (metavar "BRIGHTNESS_IN_%")
+    brightOptions = Bright <$> argument auto (metavar "BRIGHTNESS_IN_%") <*> deviceListOptions
     tempOptions :: Parser Command
-    tempOptions = Temp <$> argument auto (metavar "TEMPERATURE_IN_K")
+    tempOptions = Temp <$> argument auto (metavar "TEMPERATURE_IN_K") <*> deviceListOptions
     listOptions :: Parser Command
     listOptions = List <$> argument parseListable (metavar "ITEM")
     parseListable :: ReadM Listable
     parseListable = eitherReader $ \s -> if s == "devices" then Right Devices else Left "Invalid Listable Item"
 
 parseOptions :: FilePath -> Parser Options
-parseOptions defaultFile = Options <$> parseGlobalOptions <*> parseCommand
+parseOptions defaultFile = Options <$> (parseGlobalOptions defaultFile) <*> parseCommand
 
 getVerbose :: Options -> Bool
 getVerbose (Options o _) = optionsVerbose o
